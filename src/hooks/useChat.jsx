@@ -7,7 +7,7 @@ import { useSupabaseRealtime } from './useSupabaseRealtime.jsx';
 export const useChat = (user, selectedChatUser, token) => {
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
+  
   // 기본 채팅 유저 정보 (선택된 채팅이 없을 때 사용)
   const defaultChatUser = useMemo(() => ({
     name: "새로운 대화",
@@ -125,6 +125,8 @@ export const useChat = (user, selectedChatUser, token) => {
 
   // 메시지 전송 핸들러
   const handleSendMessage = useCallback(async (messageText) => {
+    if (!messageText.trim() || isLoading) return;
+
     setIsLoading(true);
     const tempId = Date.now() + Math.random();
     const message = {
@@ -137,51 +139,78 @@ export const useChat = (user, selectedChatUser, token) => {
       avatar: user?.avatar,
       status: 'sending'
     };
-    
 
-    const chatKey = currentChatUser.chatId; // chatKey를 chatId로 변경
-    setMessagesHistory(prev => {
-      const newState = { ...prev, [currentChatUser.chatId]: [...(prev[currentChatUser.chatId] || []), message] };
-      console.log('useChat - setMessagesHistory (temp message) called. New state for chatKey:', chatKey, newState[chatKey]);
-      return newState;
-    });
-    
+    const chatKey = currentChatUser.chatId;
+    setMessagesHistory(prev => ({
+      ...prev,
+      [chatKey]: [...(prev[chatKey] || []), message]
+    }));
+    setNewMessage('');
 
     try {
-      // const response = await apiAxios.put('/api/chat', {
-      //   message: messageText,
-      //   to: user.userType === 'teacher' ? currentChatUser.studentID : currentChatUser.instructorID,
-      //   to_name: user.userType === 'teacher' ? currentChatUser.studentName : currentChatUser.instructorName
-      // });
+      // 1. 메시지 전송용 임시 토큰 생성 요청 (JSON body 사용)
+      const tokenRequestData = {
+        tokenType: 'message',
+        payload: {
+          identy: user.identy,
+          type: user.type,
+          sub: 'message',
+          from: user.id,
+          to: currentChatUser.id,
+          from_name: user.name,
+          to_name: currentChatUser.name,
+          message: messageText,
+          chatId: currentChatUser.chatId
+        }
+      };
 
-      // 목업 서버에 메시지 전송
-      const response = await apiAxios.put('/api/chat', {
-        message: messageText,
-        to: user.userType === 'teacher' ? currentChatUser.studentID : currentChatUser.instructorID,
-        to_name: user.userType === 'teacher' ? currentChatUser.studentName : currentChatUser.instructorName
+      const tokenResponse = await apiAxios.post('/api/generate-token', tokenRequestData);
+      // axios는 객체 본문을 자동으로 application/json으로 설정합니다.
+
+      if (tokenResponse.status !== 200 || !tokenResponse.data.success) {
+        throw new Error(tokenResponse.data.error || '임시 토큰 생성에 실패했습니다.');
+      }
+      const tempToken = tokenResponse.data.data.token;
+
+      // 2. 발급받은 임시 토큰으로 메시지 전송 API 호출
+      const sendMessageResponse = await apiAxios.post(`/api/edit/chat?token=${tempToken}&sub=chat`, {
+        message: messageText, // 메시지 내용
+        to: currentChatUser.id, // 받는 사람 ID
+        to_name: currentChatUser.name // 받는 사람 이름
       });
+      
+      if (sendMessageResponse.status !== 200 || !sendMessageResponse.data.success) {
+        throw new Error(sendMessageResponse.data.error || '메시지 전송에 실패했습니다.');
+      }
+      
+      const { messageInfo, chat } = sendMessageResponse.data;
 
-      // json-server는 생성된 리소스를 반환하므로, response.data가 바로 메시지 객체
-      const responseData = await response.json();
+      // UI 업데이트
       setMessagesHistory(prev => ({
         ...prev,
         [chatKey]: prev[chatKey].map(msg =>
-          msg.id === tempId ? { ...msg, id: responseData.id, timestamp: responseData.timestamp, status: 'delivered' } : msg
+          msg.id === tempId ? { ...msg, id: messageInfo.uid, timestamp: new Date(messageInfo.timestamp), status: 'delivered' } : msg
         )
       }));
 
-      // 사이드바 채팅 목록 업데이트를 위한 이벤트 발생
-      window.dispatchEvent(new CustomEvent('chatUpdated', { 
-        detail: { chatUser: chatKey, lastChat: responseData.chat?.lastChat, unreadCount: 0 } 
+      // 사이드바 채팅 목록 업데이트
+      window.dispatchEvent(new CustomEvent('chatUpdated', {
+        detail: { chatUser: chatKey, lastChat: chat.lastChat, unreadCount: 0 }
       }));
-      console.log('useChat: chatUpdated event dispatched from handleSendMessage. Detail:', { chatUser: chatKey, lastChat: responseData.message, unreadCount: 0 });
-      setNewMessage(''); // 메시지 전송 성공 시에만 입력 필드 비우기
+
     } catch (error) {
-      
+      console.error('메시지 전송 오류:', error);
+      // 에러 UI 처리
+      setMessagesHistory(prev => ({
+        ...prev,
+        [chatKey]: prev[chatKey].map(msg =>
+          msg.id === tempId ? { ...msg, status: 'failed', errorMessage: error.message } : msg
+        )
+      }));
     } finally {
       setIsLoading(false);
     }
-  }, [user, currentChatUser, setMessagesHistory]);
+  }, [user, currentChatUser, setMessagesHistory, isLoading, setNewMessage]);
 
   // 파일 첨부 핸들러 (현재는 콘솔 로그만 출력)
   const handleAttachment = useCallback(() => {

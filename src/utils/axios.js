@@ -4,11 +4,12 @@ import axios from 'axios';
 // apiAxios/요청 주소로 적는다.
 // 실제 백엔드 API (Spring Boot)를 위한 인스턴스
 const apiAxios = axios.create({
-  baseURL: 'http://localhost:5743', // 실제 백엔드 API URL
+  baseURL: 'http://localhost:8081', // 실제 백엔드 API URL
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
 // 더미 데이터 서버 (json-server)를 위한 인스턴스

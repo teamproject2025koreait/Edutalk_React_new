@@ -6,6 +6,9 @@ export const useChatList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const token= localStorage.getItem('authToken');
+  // console.log(token)
+  
   // 채팅 업데이트 이벤트 핸들러를 useCallback으로 감싸 안정적인 참조를 유지
   const handleChatUpdate = useCallback((event) => {
     console.log('useChatList - handleChatUpdate received event:', event.detail);
@@ -49,9 +52,12 @@ export const useChatList = () => {
     console.log('useChatList - fetchChats is being called.');
     try {
       setLoading(true);
-      const response = await apiAxios.get('/api/chats');
+      const response = await apiAxios.get(`/api/search?token=${token}&sub=list`);
       
-      setChats(response.data.chats);
+      // API 응답에 chats가 있고, 배열일 경우에만 상태를 업데이트하고, 그렇지 않으면 빈 배열로 설정
+      setChats(response.data && Array.isArray(response.data.chats) ? response.data.chats : []);
+      console.log(response.data)
+      console.log(response.data.chats);
     } catch (err) {
       setError(err.message);
     } finally {

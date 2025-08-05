@@ -25,3 +25,4 @@ dist-ssr
 
 # Local JSON Server DB
 db.json
+.env

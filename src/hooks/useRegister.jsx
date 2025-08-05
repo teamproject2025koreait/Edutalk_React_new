@@ -79,7 +79,7 @@ export const useRegister = () => {
     setRegistrationResult(null);
 
     try {
-      const response = await apiAxios.post('/api/register', {
+      const response = await apiAxios.post('/api/auth/register', {
         identy : formData.identy,
         email : formData.email,
         password : formData.password,

@@ -41,22 +41,31 @@ export const useLogin = () => {
       
 
       // 실제 백엔드 API 호출 예시 (주석 해제 후 사용)
-      const response = await apiAxios.post('/api/login', new URLSearchParams(formData), {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+      const response = await apiAxios.post('/api/auth/login', JSON.stringify(formData), {
+        headers: { 'Accept': 'application/json' },
         withCredentials: true, // 세션/쿠키 기반 인증 시 필요
       });
+
+      console.log('서버 응답 전체:', response);
+      console.log('서버 응답 데이터:', response.data);
+      console.log('데이타토큰:', response.data.token);
+      console.log('데이타데이타토큰:', response.data.data.token);
 
       alert('로그인이 성공적으로 완료되었습니다!');
 
       // [백엔드 연동 가이드]
       // 백엔드에서 토큰을 반환하는 경우, 아래와 같이 localStorage에 저장할 수 있습니다.
-      localStorage.setItem('authToken', response.data.token);
+      if (!response.data || !response.data.data || !response.data.data.token) {
+        setError('로그인에 실패했습니다: 토큰을 받지 못했습니다. 서버 응답 구조를 확인해주세요.');
+        setIsLoading(false);
+        return;
+      }
+
+      localStorage.setItem('authToken', response.data.data.token);
       
-      
-    
-      const tokenPayload = JSON.parse(atob(response.data.token.split('.')[1]));
+      const tokenPayload = JSON.parse(atob(response.data.data.token.split('.')[1]));
       const userData = {
-        id: atob(tokenPayload.id), // <-- 이 부분을 수정합니다.
+        id: tokenPayload.sub, // 'id' 대신 'sub' 필드 사용
         email: tokenPayload.email,
         identy: tokenPayload.identy,
         userType: tokenPayload.type, // 'type'을 'userType'으로 매핑

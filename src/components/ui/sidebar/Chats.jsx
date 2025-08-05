@@ -9,6 +9,8 @@ const ChatsContent = ({ setIsSidebarOpen, user }) => {
   const navigate = useNavigate();
   const { chats, loading, error, formatTime, setChats } = useChatList();
   const { setSelectedChatUser } = useChat();
+  const token= localStorage.getItem('authToken');
+  console.log(token)
 
   const getPartnerName = (chat) => {
     if (!user) return '';
@@ -18,7 +20,7 @@ const ChatsContent = ({ setIsSidebarOpen, user }) => {
 
   const handleChatClick = async (chat) => {
     setSelectedChatUser(chat);
-    navigate(`/dashboard/chats?chatId=${chat.uid}`);
+    navigate(`/dashboard/chats?token=${token}&chatId=${chat.uid}`);
     if (setIsSidebarOpen) {
       setIsSidebarOpen(false);
     }

@@ -14,7 +14,7 @@ export function SidebarPanel({
 }) {
   const navigate = useNavigate();
   const { sidebarTab, tabs, handleTabClick } = useSidebarTabs();
-
+  const token= localStorage.getItem('authToken');
   return (
     <motion.div
       className={dashboard.sidebar.panel}
@@ -30,7 +30,7 @@ export function SidebarPanel({
             onClick={() => {
               handleTabClick(tab);
               if (!isMobile) {
-                navigate(`${tab.mainTab}`);
+                navigate(`${tab.mainTab}?token=${token}`);
                 if (setIsSidebarOpen) {
                   setIsSidebarOpen(false);
                 }

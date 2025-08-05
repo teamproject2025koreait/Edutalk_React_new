@@ -6,6 +6,8 @@ export const useNotices = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+   const token= localStorage.getItem('authToken');
+
   const fetchNotices = async () => {
     try {
       setLoading(true);
@@ -15,7 +17,7 @@ export const useNotices = () => {
       //   throw new Error('Failed to fetch notices');
       // }
       // const data = await response.json();
-      const response = await apiAxios.get('/api/notices');
+      const response = await apiAxios.get(`/api/search?token=${token}&sub=list`);
       
       setNotices(response.data.notices);
     } catch (err) {
