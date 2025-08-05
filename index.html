@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko" className="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no"
+    />
+    <meta name="theme-color" content="#3b82f6" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="EduTalk" />
+    <meta
+      name="description"
+      content="강사와 학생을 연결하는 혁신적인 교육 플랫폼"
+    />
+    <meta
+      name="keywords"
+      content="교육, 학습, 강사, 학생, 온라인 교육, 실시간 채팅"
+    />
+    <meta property="og:title" content="EduTalk - 스마트한 교육 플랫폼" />
+    <meta
+      property="og:description"
+      content="AI 기반 학습 분석과 실시간 소통으로 강사와 학생 모두가 성장하는 교육 플랫폼"
+    />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <style>
+      /* iOS Safari 확대 방지 및 레이아웃 안정성 */
+      * {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+      }
+
+      html,
+      body {
+        height: 100%;
+        overflow-x: hidden;
+        overscroll-behavior: none;
+      }
+
+      body {
+        position: fixed;
+        width: 100%;
+        -webkit-text-size-adjust: 100%;
+      }
+
+      /* 모바일 키보드 대응 */
+      @supports (-webkit-appearance: none) {
+        html {
+          height: -webkit-fill-available;
+        }
+        body {
+          min-height: -webkit-fill-available;
+        }
+      }
+    </style>
+  </head>
+
+  <body
+    className="font-sans antialiased bg-gradient-to-br from-neutral-50 via-white to-primary-50/20 text-neutral-900 scroll-smooth h-full selection:bg-primary-200 selection:text-primary-800"
+  >
+    <div id="root" class="w-full min-h-screen"></div>
+    <div id="modal-root"></div>
+    <script type="module" src="/src/index.jsx"></script>
+  </body>
+</html>
